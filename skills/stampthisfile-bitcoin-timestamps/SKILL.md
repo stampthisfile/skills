@@ -73,7 +73,7 @@ node $S price contract.pdf design.png           # the total, free
 X402_PAYER_KEY=0x… node $S stamp contract.pdf design.png --max 0.25
 #   writes contract.pdf.ots (the proof) and contract.pdf.stamp.json (id, URLs, signed receipt)
 node $S upgrade contract.pdf                    # a few hours later: fetches the complete proof
-node $S verify contract.pdf                     # checks contract.pdf.ots against the file
+node $S verify contract.pdf                     # checks contract.pdf.ots; completes it if it was pending
 ```
 
 - **Safety:** `stamp` refuses to pay more than `--max` USD in total (default
@@ -112,7 +112,9 @@ node $S verify contract.pdf                     # checks contract.pdf.ots agains
 
 **Verify (free):** `POST /v1/verify` with
 `{"hash": "<sha256>", "ots": "<base64 .ots>"}` returns `complete`, `pending`
-or `invalid`.
+or `invalid`. If you send a pending proof that the calendars have since
+committed, it comes back `complete` with `"upgraded": true` and the completed
+proof in `ots` (base64). Save that in place of the pending file.
 
 ## Keep the stamp useful
 

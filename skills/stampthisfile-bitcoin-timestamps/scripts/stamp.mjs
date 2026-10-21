@@ -9,7 +9,7 @@
  *   node stamp.mjs stamp <file>... [--max 0.25] [--yes] [--webhook https://…]
  *                                                   pay and stamp; needs X402_PAYER_KEY and `npm i viem`
  *   node stamp.mjs upgrade <file>...                fetch the latest proof (complete once in Bitcoin)
- *   node stamp.mjs verify <file> [<file>.ots]       check a proof against the file
+ *   node stamp.mjs verify <file> [<file>.ots]       check a proof against the file (completes a pending one)
  *
  * Writes <file>.ots (the proof) and <file>.stamp.json (stamp id, URLs, signed
  * receipt) next to each file. Only `stamp` pays, and it refuses to spend more
@@ -175,6 +175,11 @@ async function main() {
     const out = await json(res)
     if (!res.ok) die(`Verify failed (${res.status}): ${out.error?.message ?? JSON.stringify(out)}`)
     console.log(out.status === 'complete' ? `valid: ${out.statement}` : out.status === 'pending' ? `valid but pending: ${out.note}` : `INVALID: ${out.reason}`)
+    // A pending proof the calendars have since committed comes back complete: keep that one (it contains the old one).
+    if (out.upgraded && out.ots) {
+      writeFileSync(proof, Buffer.from(out.ots, 'base64'))
+      console.log(`${proof} was pending; saved the complete proof over it.`)
+    }
     if (out.status === 'invalid') process.exit(1)
     return
   }
